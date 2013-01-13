@@ -6,7 +6,10 @@ package genwave;
 
 /**
  *
- * @author john
+ * @author MultiTool
+ * 
+ * Handy functions.  I like cats.
+ * 
  */
 public class Cats {
 

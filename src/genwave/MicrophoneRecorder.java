@@ -8,15 +8,20 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import javax.sound.sampled.*;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.TargetDataLine;
 
 /**
  *
- * @author john
+ * @author MultiTool
  */
 /**  
  * Reads data from the input channel and writes to the output stream  
  */
-public class MicrophoneRecorder {// implements Runnable {
+public class MicrophoneRecorder implements Runnable {
   // record microphone && generate stream/byte array  
 
   public static final int SAMPLE_RATE = 44100;
@@ -51,7 +56,7 @@ public class MicrophoneRecorder {// implements Runnable {
             signed,
             bigEndian);
   }//end getAudioFormat
-  public void Test() {// throws Exception 
+  public static void Test() {// throws Exception 
     {
       for (Mixer.Info mixerinfo : AudioSystem.getMixerInfo()) {
         Mixer mixer = AudioSystem.getMixer(mixerinfo);
@@ -66,8 +71,8 @@ public class MicrophoneRecorder {// implements Runnable {
           try {
 
             {
-              // if (AudioSystem.isLineSupported(Port.Info.MICROPHONE)) {
-              if (AudioSystem.isLineSupported(Port.Info.LINE_IN)) {
+              if (AudioSystem.isLineSupported(Port.Info.MICROPHONE)) {
+              //if (AudioSystem.isLineSupported(Port.Info.LINE_IN)) {
                 try {
                   Port line = (Port) AudioSystem.getLine(Port.Info.MICROPHONE);
                 } catch (Exception ex) {
@@ -115,9 +120,9 @@ public class MicrophoneRecorder {// implements Runnable {
       }
 // Obtain and open the line.
       try {
-        AudioFormat formatx = new AudioFormat((float) SAMPLE_RATE, BITS_PER_SAMPLE, 1, true, false);
-        line = (TargetDataLine) AudioSystem.getLine(info);
-        line.open(formatx);
+        TargetDataLine line1;
+        //line1 = (TargetDataLine) AudioSystem.getLine(info);
+        //line1.open(formatx);
       } catch (Exception ex) {
         // Handle the error ... 
       }
