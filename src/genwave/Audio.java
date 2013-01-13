@@ -28,6 +28,51 @@ public class Audio {
     running = false;
     playAudio();
   }
+  int bufferSize;
+  byte buffer[];
+  /* **************************************************************************** */
+  private void CaptureAudioToBuffer() {
+    // still figuring out the right way to do this
+    try {
+      final AudioFormat format = getFormat();
+      DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+      final TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
+      line.open(format);
+      line.start();
+
+      try {
+        int count = line.read(buffer, 0, buffer.length);
+        if (count > 0) {
+          out.write(buffer, 0, count);
+        }
+        out.close();
+      } catch (IOException e) {
+        System.err.println("I/O problems: " + e);
+        System.exit(-1);
+      }
+
+      Runnable runner = new Runnable() {
+        @Override
+        public void run() {
+          try {
+            int count = line.read(buffer, 0, buffer.length);
+            if (count > 0) {
+              out.write(buffer, 0, count);
+            }
+            out.close();
+          } catch (IOException e) {
+            System.err.println("I/O problems: " + e);
+            System.exit(-1);
+          }
+        }
+      };
+      Thread captureThread = new Thread(runner);
+      captureThread.start();
+    } catch (LineUnavailableException e) {
+      System.err.println("Line unavailable: " + e);
+      System.exit(-2);
+    }
+  }
   /* **************************************************************************** */
   private void captureAudio() {
     try {
