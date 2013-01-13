@@ -32,7 +32,7 @@ public class Audio {
   byte buffer[];
   /* **************************************************************************** */
   private void CaptureAudioToBuffer() {
-    // still figuring out the right way to do this
+    // still thinking about the right way to do this
     try {
       final AudioFormat format = getFormat();
       DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
@@ -115,8 +115,7 @@ public class Audio {
       byte audio[] = out.toByteArray();
       InputStream input = new ByteArrayInputStream(audio);
       final AudioFormat format = getFormat();
-      final AudioInputStream ais =
-        new AudioInputStream(input, format, audio.length / format.getFrameSize());
+      final AudioInputStream ais = new AudioInputStream(input, format, audio.length / format.getFrameSize());
       DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
       final SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
       line.open(format);
@@ -146,6 +145,80 @@ public class Audio {
       playThread.start();
     } catch (LineUnavailableException e) {
       System.err.println("Line unavailable: " + e);
+      System.exit(-4);
+    }
+  }
+  /* **************************************************************************** */
+  private void Feedback(byte audio[]) {
+    try {
+      InputStream input = new ByteArrayInputStream(audio);
+      final AudioFormat SpeakFormat = getFormat();
+      final AudioInputStream ais = new AudioInputStream(input, SpeakFormat, audio.length / SpeakFormat.getFrameSize());
+      DataLine.Info info = new DataLine.Info(SourceDataLine.class, SpeakFormat);
+      final SourceDataLine SpeakLine = (SourceDataLine) AudioSystem.getLine(info);
+      SpeakLine.open(SpeakFormat);
+      SpeakLine.start();
+
+      final AudioFormat ListenFormat = getFormat();
+      DataLine.Info ListenInfo = new DataLine.Info(TargetDataLine.class, ListenFormat);
+      final TargetDataLine ListenLine = (TargetDataLine) AudioSystem.getLine(ListenInfo);
+      ListenLine.open(ListenFormat);
+      ListenLine.start();
+
+      Runnable SpeakerRun = new Runnable() { // player
+        int bufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
+        byte buffer[] = new byte[bufferSize];
+        @Override
+        public void run() {
+          try {
+            int count;
+            while ((count = ais.read(buffer, 0, buffer.length)) != -1) {
+              if (count > 0) {
+                SpeakLine.write(buffer, 0, count);
+              }
+            }
+            running = false;
+            SpeakLine.drain();
+            SpeakLine.close();
+          } catch (IOException e) {
+            System.err.println("I/O problems: " + e);
+            running = false;
+            System.exit(-3);
+          }
+        }
+      };
+      Thread playThread = new Thread(SpeakerRun);
+
+      Runnable ListenerRun = new Runnable() {
+        int bufferSize = (int) ListenFormat.getSampleRate() * ListenFormat.getFrameSize();
+        byte buffer[] = new byte[bufferSize];
+        @Override
+        public void run() {
+          out = new ByteArrayOutputStream();
+          running = true;
+          try {
+            while (running) {
+              int count = ListenLine.read(buffer, 0, buffer.length);
+              if (count > 0) {
+                out.write(buffer, 0, count);
+              }
+            }
+            out.close();
+          } catch (IOException e) {
+            System.err.println("I/O problems: " + e);
+            System.exit(-1);
+          }
+        }
+      };
+      Thread captureThread = new Thread(ListenerRun);
+
+      running = true;
+      playThread.start();
+      captureThread.start();
+
+    } catch (LineUnavailableException e) {
+      System.err.println("Line unavailable: " + e);
+      System.exit(-2);
       System.exit(-4);
     }
   }
