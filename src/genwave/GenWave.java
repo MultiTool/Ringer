@@ -6,11 +6,17 @@ import java.util.Collections;
 import java.util.Comparator;
 
 class GenWave {
-
   public static final int ClipLow = -1024, ClipHigh = +1024;
   public static int ClipRange = ClipHigh - ClipLow;
   public static void main(String[] args) {
     // TODO code application logic here
+
+    if (true) {
+      Audio aud = new Audio();
+      aud.Test();
+      return;
+    }
+
     //GenWave.Population pop = new GenWave.Population();
     try {
       MicrophoneRecorder.Test();
@@ -20,13 +26,11 @@ class GenWave {
   }
   /* **************************************************************************** */
   public interface IDeletable {
-
     void Delete();// virtual
   }
 
   /* **************************************************************************** */
   public static class Population implements IDeletable {
-
     public int MyPopSize;
     public Ind[] Peeps;
     public void Seed(int PopSize, int SampleSize) {
@@ -42,7 +46,6 @@ class GenWave {
     public void Sort() {
       Collections.shuffle(Arrays.asList(this.Peeps));// shuffle to prevent bias in order when many scores are equal
       Arrays.sort(this.Peeps, new Comparator<Ind>() {
-
         @Override
         public int compare(Ind I0, Ind I1) {
           return Double.compare(I0.Score, I1.Score);
@@ -162,7 +165,6 @@ class GenWave {
   }
   /* **************************************************************************** */
   public static class Socket implements IDeletable {// maybe use this
-
     public Ind Peep;
     @Override
     public void Delete() {
@@ -170,7 +172,6 @@ class GenWave {
   }
   /* **************************************************************************** */
   public static class Ind implements IDeletable {
-
     public static final int MaxSize = 200;
     //public static final int MinSize = 100;
     //public static final int MaxSize = 13;
@@ -332,7 +333,6 @@ class GenWave {
   }
   public static class TargetList extends ArrayList<Target> {
     /* **************************************************************************** */
-
     public void Seed(int NumTargets, int SampleSize) {
       for (int cnt = 0; cnt < NumTargets; cnt++) {
         Target tg = new Target();
@@ -361,7 +361,6 @@ class GenWave {
     }
   }
   public static class Target {
-
     public double Amplitude;
     public double Radius;
     public int VecLen;
