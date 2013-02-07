@@ -4,8 +4,6 @@
  */
 package genwave;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,10 +26,9 @@ public class Audio {
   byte buffer[];
   /* **************************************************************************** */
   private AudioFormat getFormat() {
-    float sampleRate = 8000;
-    //float sampleRate = 44100;
-    int sampleSizeInBits = 0;
-    sampleSizeInBits = sampleint;
+    //float sampleRate = 8000;
+    float sampleRate = 44100;
+    int sampleSizeInBits = sampleint;
     int channels = 1;
     boolean signed = true;
     boolean bigEndian = true;
@@ -40,8 +37,9 @@ public class Audio {
   /* **************************************************************************** */
   private void Feedback(byte audio[]) {
     try {
-      InputStream input = new ByteArrayInputStream(audio);
       final AudioFormat SpeakFormat = getFormat();
+      int numframes = audio.length / SpeakFormat.getFrameSize();
+      InputStream input = new ByteArrayInputStream(audio);
       final AudioInputStream ais = new AudioInputStream(input, SpeakFormat, audio.length / SpeakFormat.getFrameSize());
       DataLine.Info info = new DataLine.Info(SourceDataLine.class, SpeakFormat);
       final SourceDataLine SpeakLine = (SourceDataLine) AudioSystem.getLine(info);
@@ -55,6 +53,7 @@ public class Audio {
       ListenLine.start();
 
       Runnable SpeakerRun = new Runnable() { // player
+        float numframes = 1000;// SpeakFormat.getSampleRate();
         int bufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
         byte buffer[] = new byte[bufferSize];
         @Override
@@ -67,11 +66,15 @@ public class Audio {
               }
             }
             SpeakLine.drain();
-            SpeakLine.close();
             try {
-              Thread.sleep(100);
+//              float dlay = ((float) (1000 * numframes)) / SpeakFormat.getSampleRate();
+//              Thread.sleep((int) dlay);
+              Thread.sleep(25);// length of the whole sample in milliseconds
             } catch (Exception ex) {
             }
+            //while (SpeakLine.getFramePosition() < numframes) {}
+            //while (SpeakLine.isActive()){}
+            SpeakLine.close();
             running = false;
           } catch (IOException e) {
             System.err.println("I/O problems: " + e);
@@ -87,14 +90,24 @@ public class Audio {
 
       out = new ByteArrayOutputStream();
       running = true;
-      playThread.start();
+      //running = false;
 
+//      playThread.setPriority(Thread.MAX_PRIORITY);
+//      playThread.setDaemon(true);
+//      playThread.start();
+//      try {
+//        Thread.sleep(100);
+//      } catch (Exception ex) {
+//      }
+
+      int count;
+      int[] WavInt;
       try {
         while (running) {
-          int count = ListenLine.read(buffer, 0, buffer.length);
+          count = ListenLine.read(buffer, 0, buffer.length);
           if (count > 0) {
             out.write(buffer, 0, count);
-            int[] WavInt = Bytes2Ints(buffer, count, BytesPerSample);
+            WavInt = Bytes2Ints(buffer, count, BytesPerSample);
             for (int bcnt = 0; bcnt < WavInt.length; bcnt++) {
               int bt = WavInt[bcnt];
               System.out.println(bt);
