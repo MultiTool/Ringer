@@ -18,10 +18,6 @@ class GenWave {
     }
 
     //GenWave.Population pop = new GenWave.Population();
-    try {
-      MicrophoneRecorder.Test();
-    } catch (Exception ex) {
-    }
     //Test();
   }
   /* **************************************************************************** */
