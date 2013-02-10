@@ -85,7 +85,7 @@ class Ringer {
       }
     }
     /* **************************************************************************** */
-    public void Modify(double PopRate, double IndRate) {
+    public void Mutate(double PopRate, double IndRate) {
       /*
        so decide, will each ind have its own array length, or will all be the same?
 
@@ -102,12 +102,12 @@ class Ringer {
         // this assumes that the population was sorted with high scorers on top, and their kids copied to the bottom
         int Fraction = (int) (this.MyPopSize * PopRate);
         for (int cnt = 0; cnt < Fraction; cnt++) {
-          Peeps[cnt].Modify(IndRate);
+          Peeps[cnt].Mutate(IndRate);
         }
       } else {
         for (int cnt = 0; cnt < this.MyPopSize; cnt++) {
           if (Cats.rand.nextDouble() < PopRate) {
-            Peeps[cnt].Modify(IndRate);
+            Peeps[cnt].Mutate(IndRate);
           }
         }
       }
@@ -201,7 +201,7 @@ class Ringer {
       Wav = null;
     }
     /* **************************************************************************** */
-    public void Modify(double Rate) {
+    public void Mutate(double Rate) {
       for (int cnt = 0; cnt < this.SampleLength; cnt++) {
         if (Cats.rand.nextDouble() < Rate) {
           switch (0) {
@@ -321,7 +321,7 @@ class Ringer {
       }
 
       pop.NextGen(0.5);
-      pop.Modify(0.5, 0.05);
+      pop.Mutate(0.5, 0.05);
 
       GenCnt++;
     }
