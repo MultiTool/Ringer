@@ -5,20 +5,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+/*
+ Note: There are odd code patterns here, put only only to make porting to C++ or D language easier.
+ */
 class Ringer {
   public static final int ClipLow = -1024, ClipHigh = +1024;
   public static int ClipRange = ClipHigh - ClipLow;
   public static void main(String[] args) {
     // TODO code application logic here
 
-    if (true) {
+    if (false) {
       Audio aud = new Audio();
       aud.Test();
+      //ScoreTest(int SoundInts[], int NumSamples)
       return;
     }
 
-    //Ringer.Population pop = new Ringer.Population();
-    //Test();
+    Ringer.Population pop = new Ringer.Population();
+    Test();
   }
   /* **************************************************************************** */
   public interface IDeletable {
@@ -29,6 +33,10 @@ class Ringer {
   public static class Population implements IDeletable {
     public int MyPopSize;
     public Ind[] Peeps;
+    Audio aud = null;
+    public Population() {
+      aud = new Audio();
+    }
     public void Seed(int PopSize, int SampleSize) {
       Ind ani;
       MyPopSize = PopSize;
@@ -85,7 +93,7 @@ class Ringer {
       }
     }
     /* **************************************************************************** */
-    public void Modify(double PopRate, double IndRate) {
+    public void Mutate(double PopRate, double IndRate) {
       /*
        so decide, will each ind have its own array length, or will all be the same?
 
@@ -102,12 +110,12 @@ class Ringer {
         // this assumes that the population was sorted with high scorers on top, and their kids copied to the bottom
         int Fraction = (int) (this.MyPopSize * PopRate);
         for (int cnt = 0; cnt < Fraction; cnt++) {
-          Peeps[cnt].Modify(IndRate);
+          Peeps[cnt].Mutate(IndRate);
         }
       } else {
         for (int cnt = 0; cnt < this.MyPopSize; cnt++) {
           if (Cats.rand.nextDouble() < PopRate) {
-            Peeps[cnt].Modify(IndRate);
+            Peeps[cnt].Mutate(IndRate);
           }
         }
       }
@@ -140,6 +148,15 @@ class Ringer {
       this.Peeps = null;
     }
     /* **************************************************************************** */
+    public void RunTestAudio() {
+      for (int cnt = 0; cnt < MyPopSize; cnt++) {// this must be connected to crucible
+        Ind Peep = this.Peeps[cnt];
+        int[] Wav = Peep.Wav;
+        Peep.Score = aud.ScoreTest(Wav, Wav.length);
+        boolean nop = true;
+      }
+    }
+    /* **************************************************************************** */
     public void RunTest(TargetList tl) {
       for (int cnt = 0; cnt < MyPopSize; cnt++) {// this must be connected to crucible
         this.Peeps[cnt].RunTest(tl);
@@ -155,8 +172,12 @@ class Ringer {
       return Sum;
     }
     /* **************************************************************************** */
-    public double GetElMejor() {
-      return Peeps[MyPopSize - 1].Score;
+    public double GetElMejorCuenta() {
+      return GetElMejor().Score;
+    }
+    /* **************************************************************************** */
+    public Ind GetElMejor() {
+      return Peeps[MyPopSize - 1];
     }
   }
   /* **************************************************************************** */
@@ -168,7 +189,7 @@ class Ringer {
   }
   /* **************************************************************************** */
   public static class Ind implements IDeletable {
-    public static final int MaxSize = 200;
+    public static final int MaxSize = 400;
     //public static final int MinSize = 100;
     //public static final int MaxSize = 13;
     public static final int MinSize = MaxSize / 2;
@@ -201,7 +222,7 @@ class Ringer {
       Wav = null;
     }
     /* **************************************************************************** */
-    public void Modify(double Rate) {
+    public void Mutate(double Rate) {
       for (int cnt = 0; cnt < this.SampleLength; cnt++) {
         if (Cats.rand.nextDouble() < Rate) {
           switch (0) {
@@ -306,22 +327,29 @@ class Ringer {
     tl.SeedRamp(1, Ind.MaxSize);
     Population pop = new Population();
     pop.Seed(100, Ind.MaxSize);
+    //pop.Seed(50, Ind.MaxSize);
     double BestScore = 0.0;
     double DragBest = 0.0;
     int GenCnt = 0;
-    while (DragBest < 0.9) {
-      pop.RunTest(tl);
+    //while (DragBest < 0.9) {
+    while (GenCnt < 1000) {
+      //pop.RunTest(tl);
+      pop.RunTestAudio();
       pop.Sort();
-      BestScore = pop.GetElMejor();
+      BestScore = pop.GetElMejorCuenta();
       DragBest = DragBest * 0.9 + BestScore * 0.1;
-      if ((GenCnt % 10000) == 0) {
+
+      System.out.println(" " + GenCnt + "  " + pop.GetPromedioGanancias() + " " + BestScore);
+
+//      if ((GenCnt % 10000) == 0) {
+      if ((GenCnt % 10) == 0) {
         //System.out.println("{0,10:0} {1,10:0.00} {2}", GenCnt, pop.GetPromedioGanancias(), pop.GetElMejor());
         //System.out.format("%i %f %f", GenCnt, pop.GetPromedioGanancias(), pop.GetElMejor());
-        System.out.println(" " + GenCnt + "  " + pop.GetPromedioGanancias() + " " + BestScore);
+        // System.out.println(" " + GenCnt + "  " + pop.GetPromedioGanancias() + " " + BestScore);
+        // pop.aud.PrintSample(HearInts, HearInts.length);
       }
-
       pop.NextGen(0.5);
-      pop.Modify(0.5, 0.05);
+      pop.Mutate(0.5, 0.05);
 
       GenCnt++;
     }

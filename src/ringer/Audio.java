@@ -16,6 +16,8 @@ import javax.sound.sampled.*;
  Cannibalized from
  http://www.java-tips.org/java-se-tips/javax.sound/capturing-audio-with-java-sound-api.html
 
+ Note: There are odd code patterns here, put only only to make porting to C++ or D language easier.
+
  */
 public class Audio {
   protected boolean running;
@@ -78,8 +80,9 @@ public class Audio {
             running = false;
           } catch (IOException e) {
             System.err.println("I/O problems: " + e);
+            System.out.println("I/O problems: " + e);
             running = false;
-            System.exit(-3);
+            //System.exit(-3);
           }
         }
       };
@@ -94,7 +97,7 @@ public class Audio {
 
 //      playThread.setPriority(Thread.MAX_PRIORITY);
 //      playThread.setDaemon(true);
-//      playThread.start();
+      playThread.start();
 //      try {
 //        Thread.sleep(100);
 //      } catch (Exception ex) {
@@ -118,14 +121,101 @@ public class Audio {
         out.close();
       } catch (IOException e) {
         System.err.println("I/O problems: " + e);
-        System.exit(-1);
+        System.out.println("I/O problems: " + e);
+        //System.exit(-1);
       }
 
     } catch (LineUnavailableException e) {
       System.err.println("Line unavailable: " + e);
-      System.exit(-2);
-      System.exit(-4);
+      System.out.println("Line unavailable: " + e);
+      // System.exit(-4);
     }
+  }
+  /* **************************************************************************** */
+  private int[] FeedbackTest(int SoundInts[]) {
+    int[] WavInt = null;
+    byte SoundBytes[] = Ints2Bytes(SoundInts, BytesPerSample);
+    try {
+      final AudioFormat SpeakFormat = getFormat();
+      int numframes = SoundBytes.length / SpeakFormat.getFrameSize();
+      InputStream input = new ByteArrayInputStream(SoundBytes);
+      final AudioInputStream ais = new AudioInputStream(input, SpeakFormat, SoundBytes.length / SpeakFormat.getFrameSize());
+      DataLine.Info info = new DataLine.Info(SourceDataLine.class, SpeakFormat);
+      final SourceDataLine SpeakLine = (SourceDataLine) AudioSystem.getLine(info);
+      SpeakLine.open(SpeakFormat);
+      SpeakLine.start();
+
+      final AudioFormat ListenFormat = getFormat();
+      DataLine.Info ListenInfo = new DataLine.Info(TargetDataLine.class, ListenFormat);
+      final TargetDataLine ListenLine = (TargetDataLine) AudioSystem.getLine(ListenInfo);
+      ListenLine.open(ListenFormat);
+      ListenLine.start();
+
+      Runnable SpeakerRun = new Runnable() { // player
+        float numframes = 1000;// SpeakFormat.getSampleRate();
+        int bufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
+        byte buffer[] = new byte[bufferSize];
+        float Delay = ((float) (1000 * numframes)) / SpeakFormat.getSampleRate();
+        @Override
+        public void run() {
+          try {
+            int count;
+            while ((count = ais.read(buffer, 0, buffer.length)) != -1) {
+              if (count > 0) {
+                SpeakLine.write(buffer, 0, count);
+              }
+            }
+            SpeakLine.drain();
+            try {
+              //Thread.sleep(25);// length of the whole sample in milliseconds
+              Thread.sleep((int) Delay);
+            } catch (Exception ex) {
+            }
+            SpeakLine.close();
+            running = false;
+          } catch (IOException e) {
+            System.err.println("I/O problems: " + e);
+            System.out.println("I/O problems: " + e);
+            running = false;
+            //System.exit(-3);
+          }
+        }
+      };
+      Thread playThread = new Thread(SpeakerRun);
+      playThread.start();
+
+      int InBufferSize = (int) ListenFormat.getSampleRate() * ListenFormat.getFrameSize();
+      InBufferSize /= 4;
+      //InBufferSize += 1;
+      byte InBuffer[] = new byte[InBufferSize];
+
+      out = new ByteArrayOutputStream();
+      running = true;
+      int count;
+      try {
+        while (running) {
+          count = ListenLine.read(InBuffer, 0, InBuffer.length);
+          if (count > 0) {
+            out.write(InBuffer, 0, count);
+            WavInt = Bytes2Ints(InBuffer, count, BytesPerSample);
+          }
+        }
+        out.close();
+        ListenLine.close();
+      } catch (IOException e) {
+        System.err.println("I/O problems: " + e);
+        System.out.println("I/O problems: " + e);
+        WavInt = null;
+        ListenLine.close();
+//        System.exit(-1);
+      }
+    } catch (LineUnavailableException e) {
+      System.err.println("Line unavailable: " + e);
+      System.out.println("Line unavailable: " + e);
+      WavInt = null;
+//      System.exit(-2);
+    }
+    return WavInt;
   }
   /* **************************************************************************** */
   public int[] Bytes2Ints(byte[] byteArray, int ByteRayLen, int BytesPerSample) {
@@ -180,16 +270,30 @@ public class Audio {
     return OutBytes;
   }
   /* **************************************************************************** */
+  public void SawTooth(int SoundInts[], int NumSamples, int WaveLen) {
+    for (int icnt = 0; icnt < NumSamples; icnt++) {
+      int trunc = icnt % WaveLen;
+      SoundInts[icnt] = trunc;
+    }
+  }
+  /* **************************************************************************** */
+  public void PrintSample(int SoundInts[], int NumSamples) {
+    System.out.println("Header XXXXXXXXXXXX");
+    for (int icnt = 0; icnt < NumSamples; icnt++) {
+      int bt = SoundInts[icnt];
+      System.out.println(bt);
+    }
+  }
+  /* **************************************************************************** */
   public void Test() {
     // http://www.jsresources.org/faq_audio.html
     int NumSamples = 1000;
     byte SoundBytes[];
     int SoundInts[] = new int[NumSamples];
-    int bcnt = 0;
-    for (int icnt = 0; icnt < NumSamples; icnt++) {
-      int trunc = icnt % 120;
-      SoundInts[icnt] = trunc;
-    }
+    SawTooth(SoundInts, NumSamples, 120);
+    int[] HearInts = Test(SoundInts, NumSamples);
+    double Score = JudgeWave(HearInts, HearInts.length);
+    // Double.MAX_VALUE;
     SoundBytes = Ints2Bytes(SoundInts, BytesPerSample);
     if (false) {// test
       int SoundInts2[] = Bytes2Ints(SoundBytes, SoundBytes.length, BytesPerSample);
@@ -198,5 +302,31 @@ public class Audio {
       }
     }
     Feedback(SoundBytes);
+  }
+  /* **************************************************************************** */
+  public int[] Test(int SoundInts[], int NumSamples) {
+    int[] HearInts = FeedbackTest(SoundInts);
+    double Score = JudgeWave(HearInts, HearInts.length);
+    return HearInts;
+  }
+  /* **************************************************************************** */
+  public double ScoreTest(int SoundInts[], int NumSamples) {
+    //SawTooth(SoundInts, NumSamples, 22);// test
+    int[] HearInts = FeedbackTest(SoundInts);
+    if (HearInts == null) {
+      return 0.0;
+    }
+    //PrintSample(HearInts, HearInts.length);
+    double Score = JudgeWave(HearInts, HearInts.length);
+    return Score;
+  }
+  /* **************************************************************************** */
+  public double JudgeWave(int[] HearInts, int NumSamples) {
+    double Score = 0.0;
+    for (int scnt = 0; scnt < NumSamples; scnt++) {
+      double amp = HearInts[scnt];
+      Score += amp * amp;
+    }
+    return Score / (double) NumSamples;
   }
 }
