@@ -320,6 +320,7 @@ public class Audio {
     double Score = JudgeWave(HearInts, HearInts.length);
     return Score;
   }
+  
   /* **************************************************************************** */
   public double JudgeWave(int[] HearInts, int NumSamples) {
     double Score = 0.0;
