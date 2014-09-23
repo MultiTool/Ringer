@@ -1,3 +1,8 @@
+
+#if DoRinger
+
+#endif // DoRinger
+// porting from Java
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -133,7 +138,7 @@ public class Audio {
   }
   /* **************************************************************************** */
   private int[] FeedbackTest(int SoundInts[]) {
-    int[] WavInt = null;
+    int[] WavInt = NULL;
     byte SoundBytes[] = Ints2Bytes(SoundInts, BytesPerSample);
     try {
       final AudioFormat SpeakFormat = getFormat();
@@ -205,14 +210,14 @@ public class Audio {
       } catch (IOException e) {
         System.err.println("I/O problems: " + e);
         System.out.println("I/O problems: " + e);
-        WavInt = null;
+        WavInt = NULL;
         ListenLine.close();
 //        System.exit(-1);
       }
     } catch (LineUnavailableException e) {
       System.err.println("Line unavailable: " + e);
       System.out.println("Line unavailable: " + e);
-      WavInt = null;
+      WavInt = NULL;
 //      System.exit(-2);
     }
     return WavInt;
@@ -220,7 +225,7 @@ public class Audio {
   /* **************************************************************************** */
   public int[] Bytes2Ints(byte[] byteArray, int ByteRayLen, int BytesPerSample) {
     //int ByteRayLen = byteArray.length;
-    int[] audio = null;
+    int[] audio = NULL;
     int LastByteDex = BytesPerSample - 1;
     int IntRayLen = ByteRayLen / BytesPerSample;
     int maxshift = LastByteDex * 8;
@@ -313,14 +318,14 @@ public class Audio {
   public double ScoreTest(int SoundInts[], int NumSamples) {
     //SawTooth(SoundInts, NumSamples, 22);// test
     int[] HearInts = FeedbackTest(SoundInts);
-    if (HearInts == null) {
+    if (HearInts == NULL) {
       return 0.0;
     }
     //PrintSample(HearInts, HearInts.length);
     double Score = JudgeWave(HearInts, HearInts.length);
     return Score;
   }
-  
+
   /* **************************************************************************** */
   public double JudgeWave(int[] HearInts, int NumSamples) {
     double Score = 0.0;
@@ -331,3 +336,6 @@ public class Audio {
     return Score / (double) NumSamples;
   }
 }
+
+#endif
+
