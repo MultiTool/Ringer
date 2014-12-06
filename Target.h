@@ -39,17 +39,20 @@ public:
   double Score(vector<int> *OtherWav) {
     int Shortest = std::min(OtherWav->size(), (size_t)this->VecLen);
     double sumdeltasq = 0;
+    double ScaledWin = 0;
     int dcnt = 0;
     while (dcnt < Shortest) {
       double guess = OtherWav->at(dcnt);
       double val = this->Vector[dcnt];
       double delta = (val - guess);
       sumdeltasq += delta * delta;
+      ScaledWin += 1.0 / (1.0 + delta); // range of 0.0 to 1.0 if delta is 0 to infinity
       dcnt++;
     }
     while (dcnt < this->VecLen) {
       double val = this->Vector[dcnt];
-      sumdeltasq += val * val;
+      sumdeltasq += val * val;// as if guess is zero for the rest
+      ScaledWin += 1.0 / (1.0 + std::abs(val)); // range of 0.0 to 1.0 if delta is 0 to infinity
       dcnt++;
     }
     double distance = std::sqrt(sumdeltasq);
@@ -63,7 +66,6 @@ public:
     return Score;
   }
 };
-
 /* **************************************************************************** */
 class TargetList : public std::vector<TargetPtr> {
 /* **************************************************************************** */

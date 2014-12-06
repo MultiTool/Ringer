@@ -235,32 +235,9 @@ public:
   }
   /* **************************************************************************** */
   void RunTest(TargetList *tl) {// this must be connected to crucible
-    if (true) {
-      this->Score[0] = tl->Compare(&(this->Wav));
-      // Compare(int *OtherWav, int SampleLength)
-    } else if (true) {// select for ramp
-      this->Score[0] = 0;
-      this->Errors = 0;
-      double sumsq = 0;
-      double Value = 0;
-      for (int cnt = 0; cnt < this->SampleLength; cnt++) {
-        int val = this->Wav[cnt];
-        double delta = std::abs(val - cnt);
-        Value += 1.0 / (1.0 + delta);
-        double deltasq = delta * delta;
-        sumsq += deltasq;
-        this->Errors += delta;
-        //this->Errors += deltasq;
-        // if (delta == 0) { delta = 0.00001; } Score += 1.0 / delta;
-      }
-      //this->Errors = Math.sqrt(this->Errors);
-      //this->Errors = (this->Errors + 1.0) / (double) SampleLength;
-      //Score = 1.0 / Errors;
-      if (this->Errors < 0.01) {
-        boolean nop = true;
-      }
-      this->Score[0] = Value;
-    }
+    this->Score[0] = 0;
+    this->Errors = 0;
+    this->Score[0] = tl->Compare(&(this->Wav));
   }
 };
 
