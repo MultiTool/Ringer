@@ -3,6 +3,7 @@
 
 #include "Org.h"
 #include "Lugar.h"
+#include "Target.h"
 
 //#define popmax 1000
 //#define popmax 300
@@ -22,8 +23,14 @@ public:
   uint32_t MaxNeuroGens = 2000;
   uint64_t BioGenCnt;
   double SurvivalRate = 0.5;
+
+  TargetList *targets = NULL;
+
   /* ********************************************************************** */
   Pop() : Pop(popmax) {
+    targets = new TargetList();
+    int MaxSize = 100;
+    targets->SeedRamp(1, MaxSize);// Ind.MaxSize);
   }
   /* ********************************************************************** */
   Pop(size_t popsize) {
@@ -58,7 +65,11 @@ public:
     for (size_t cnt=0; cnt<siz; cnt++) {
       lugar=this->forestv.at(cnt);
       org=lugar->tenant;
-      org->Fire_Cycle();
+      if(false) {
+        org->Fire_Cycle(targets);
+      } else {
+        org->RunTest(targets);
+      }
     }
   }
   /* ********************************************************************** */
@@ -101,15 +112,15 @@ public:
     LugarPtr place;
 
     int RTerm;
-    if (false){
+    if (false) {
       RTerm = rand()%7;// advance the feed randomly so the Orgs will have to listen for the phase to guess right
-    }else{
+    } else {
       RTerm = BioGenCnt%7;// advance the feed arbitrarily each time so the Orgs will have to listen for the phase to guess right
     }
     this->Clear_Scores();
     for (int fcnt=0; fcnt<Fire_Test_Cycles; fcnt++) {
       this->Fire_Cycle();
-      if (Start_Testing <= fcnt){
+      if (Start_Testing <= fcnt) {
         //this->Calculate_Score_And_Success(0.25);// must be within .25 of right answer (max dist is 1.0, any dist >=0.5 is digitally wrong)
         this->Calculate_Score_And_Success(0.45);// must be within .45 of right answer (max dist is 1.0, any dist >=0.5 is digitally wrong)
       }

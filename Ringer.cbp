@@ -38,9 +38,6 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Linker>
-			<Add library="curl" />
-		</Linker>
 		<Unit filename="Audio.h" />
 		<Unit filename="Base.h" />
 		<Unit filename="Cats.h" />

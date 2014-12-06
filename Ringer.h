@@ -8,7 +8,6 @@ public:
 #if DoRinger
   static void main(String[] args) {
     // TODO code application logic here
-
     if (false) {
       Audio aud = new Audio();
       aud.Test();
@@ -214,9 +213,9 @@ public:
     }
     System.out.println("Final: " + GenCnt + "  " + pop.GetPromedioGanancias() + " " + BestScore);
   }
-#endif
+#endif // DoRinger
 };
 
 
 
-#endif // DoRinger
+

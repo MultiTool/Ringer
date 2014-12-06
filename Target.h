@@ -68,6 +68,19 @@ public:
 class TargetList : public std::vector<TargetPtr> {
 /* **************************************************************************** */
 public:
+  /* **************************************************************************** */
+  TargetList() {
+  }
+  /* **************************************************************************** */
+  ~TargetList() {
+    int NumTargets = this->size();
+    for (int cnt = 0; cnt < NumTargets; cnt++) {
+      TargetPtr tg = this->at(cnt);
+      delete tg;
+    }
+    this->clear();// probably not needed
+  }
+  /* **************************************************************************** */
   void Seed(int NumTargets, int SampleSize) {
     for (int cnt = 0; cnt < NumTargets; cnt++) {
       TargetPtr tg = new Target();

@@ -25,7 +25,6 @@ public:
   double Score[NumScores];
   double Errors;
   struct Lugar *home;// my location
-  bool Invicto;//Undefeated
 
   //public static class Ind implements IDeletable {// from Java, same as Org but a waveform
   const static int MaxSize = 400;
@@ -47,7 +46,6 @@ public:
       this->Score[cnt] = 0.0;
     }
     this->home = NULL;
-    this->Invicto=false;
   }
   /* ********************************************************************** */
   ~Org() {
@@ -61,7 +59,8 @@ public:
     return org;
   }
   /* ********************************************************************** */
-  void Fire_Cycle() {
+  void Fire_Cycle(TargetList *tl) {
+      this->Score[0] = tl->Compare(&(this->Wav));
   }
   /* ********************************************************************** */
   void Rand_Init() {
@@ -93,14 +92,10 @@ public:
     return child;
   }
   /* ********************************************************************** */
-  void Uncompile_Me() {
-  }
-  /* ********************************************************************** */
   void Compile_Me() {
   }
   /* ********************************************************************** */
   void Clear_Score() {
-    this->Invicto = true;
     for (int cnt=0; cnt<NumScores; cnt++) {
       this->Score[cnt]=0.0;
     }
@@ -124,12 +119,10 @@ public:
   }
   /* ********************************************************************** */
   void Calculate_Score_And_Success(double Margin) {
-    bool SuccessTemp = true;
     double Real, Guessed, Error, Temp0, Temp1, SumScore0, SumScore1;
     SumScore0 = 1.0; SumScore1 = 0.0;
     this->Score[0] += SumScore0;
     this->Score[1] += SumScore1;
-    this->Invicto = this->Invicto && SuccessTemp;
   }
   /* ********************************************************************** */
   void Calculate_Score() {
@@ -143,9 +136,6 @@ public:
     bugprintf("Org\n");
     Print_Score();
     size_t siz = this->Wav.size();
-  }
-  /* ********************************************************************** */
-  void Print_Jacks() {
   }
   /* ********************************************************************** */
   void Print_Score() {
@@ -244,9 +234,9 @@ public:
     }
   }
   /* **************************************************************************** */
-  void RunTest(TargetList tl) {// this must be connected to crucible
+  void RunTest(TargetList *tl) {// this must be connected to crucible
     if (true) {
-      this->Score[0] = tl.Compare(&(this->Wav));
+      this->Score[0] = tl->Compare(&(this->Wav));
       // Compare(int *OtherWav, int SampleLength)
     } else if (true) {// select for ramp
       this->Score[0] = 0;

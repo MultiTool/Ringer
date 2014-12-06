@@ -1,7 +1,6 @@
 
 #if DoRinger
 
-#endif // DoRinger
 // porting from Java
 /*
  * To change this template, choose Tools | Templates
@@ -336,6 +335,6 @@ public class Audio {
     return Score / (double) NumSamples;
   }
 }
+#endif // DoRinger
 
-#endif
 

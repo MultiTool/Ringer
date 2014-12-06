@@ -156,7 +156,7 @@ inline double FullTime(struct timeval tm0) {// returns time in seconds and fract
 void DelayUntil(int hour) {
   struct timeval tim1;
   struct tm *tmutc;
-  do { //libcurl.dll.a
+  do {
     gettimeofday(&tim1, NULL);
     tmutc = gmtime(&tim1.tv_sec);
     usleep(30*1000000L);// thirty seconds

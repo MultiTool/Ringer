@@ -35,8 +35,6 @@ HOWEVER, we cannot dispose of the master feed through refcounting. could have de
 #include <inttypes.h>
 
 #include <hash_map>
-//#include <conio.h>
-//#include <ctype.h>
 
 #include "Base.h"
 #include "Org.h"
@@ -55,6 +53,24 @@ class Org;
 population
 creature
 genome
+
+each org is tested against reality, and the score is saved. The scores can go as high as we want.
+how to know when to stop? success is when resonance has highest energy over input waveform.
+should be (response minus input), so that it can't cheat with input==0;
+
+sin embargo, there is no final success.  so we need a good running score. when the score increases
+
+but in simulation, we have a target. just quit when we are within X dist of the target for awhile.
+
+***
+
+modifying length of genomes is just the 'copy' mutation, where a chunk of the genome is duplicated elsewhere.
+back with nodes, we just duplicated one node. with whole runs of genome, we need to specify the start and finish places.
+start place is easy, that's just like with nodes. but nodes didn't specify destination. new params will be: endmark, destination to insert.
+well insert dest is easy. endmark can be anything from startmark to gene length (less than a limit).
+pick source, copy source to other vector, insert other vector into source WHEN DONE. only one dupe per spawn?
+how to do multi dupes: save all copied chunks in a list of vectors. go through the list randomly and insert them in whole genome.
+
 
 */
 struct timeval tm0, tm1;
@@ -78,13 +94,11 @@ void PopSession() {
   }
   //int NumGenerations = 10000000;// ten million, for about 10 hours
   int NumGenerations = 100000000;// hundred million
-  bool KeepGoing = true;
   int CleanPause = 1;//16
   int MaxSize=0, SumSize = 0, AvgSize=0;
   double SumScore0 = 0.0, SumScore1 = 0.0;
   double SumAvgAvgScore = 0.0;
   double FlywheelScore = 0.0;
-  int SuccessRunCnt = 0;
 
   //printf("Pop_Create!\n");
   pop = new Pop();
@@ -100,8 +114,6 @@ void PopSession() {
     SumAvgAvgScore += AvgBeastScore;
     double score0 = org0->Score[0];
     double score1 = org0->Score[1];
-    bool Undefeated = org0->Invicto;
-    if (Undefeated) { SuccessRunCnt++; } else { SuccessRunCnt = 0; }
     SumScore0 += score0;
     SumScore1 += score1;
 
@@ -115,14 +127,8 @@ void PopSession() {
       printf("%7.2f, %7.2f ", avgscore0, avgscore1);
       printf("%7.2f, ", AvgAvgScore);
       printf("fw:%5.2f, ", FlywheelScore);
-      printf("[%s],  ", Undefeated ? "X" : "o");
+      //printf("[%s],  ", Undefeated ? "X" : "o");
       printf("\n");
-    }
-    if (SuccessRunCnt>50) {
-      if(KeepGoing) {
-        NumGenerations = gencnt + 30;// hell hack
-        KeepGoing = false;
-      }
     }
     if (NumGenerations-gencnt > 20) { // stop mutating for 20 generations in the final stretch
       //pop->Mutate(0.8, 0.8);
