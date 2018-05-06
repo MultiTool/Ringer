@@ -1,31 +1,25 @@
-###################
-# Compiled Java 
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Data dump files
+*.wav
+*.csv
+
+# Compiled Java classes
 *.class
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-obj/
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
+# Package Files #
+*.jar
+*.war
+*.ear
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
-# Executable
-*.exe
-*.dll
-*.com
-bin/
-
-# Code Blocks junk
-*.depend
-*.cbTemp
-
-# Core dumps
-*.out 
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*

@@ -1,7 +1,3 @@
-
-#if DoRinger
-
-// porting from Java
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -62,8 +58,7 @@ public class Audio {
         float numframes = 1000;// SpeakFormat.getSampleRate();
         int bufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
         byte buffer[] = new byte[bufferSize];
-        @Override
-        public void run() {
+        @Override public void run() {
           try {
             int count;
             while ((count = ais.read(buffer, 0, buffer.length)) != -1) {
@@ -117,7 +112,7 @@ public class Audio {
             WavInt = Bytes2Ints(buffer, count, BytesPerSample);
             for (int bcnt = 0; bcnt < WavInt.length; bcnt++) {
               int bt = WavInt[bcnt];
-              System.out.println(bt);
+              System.out.println("WavInt:"+bt);
             }
           }
           boolean nop = true;
@@ -137,7 +132,7 @@ public class Audio {
   }
   /* **************************************************************************** */
   private int[] FeedbackTest(int SoundInts[]) {
-    int[] WavInt = NULL;
+    int[] WavInt = null;
     byte SoundBytes[] = Ints2Bytes(SoundInts, BytesPerSample);
     try {
       final AudioFormat SpeakFormat = getFormat();
@@ -160,8 +155,7 @@ public class Audio {
         int bufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
         byte buffer[] = new byte[bufferSize];
         float Delay = ((float) (1000 * numframes)) / SpeakFormat.getSampleRate();
-        @Override
-        public void run() {
+        @Override public void run() {
           try {
             int count;
             while ((count = ais.read(buffer, 0, buffer.length)) != -1) {
@@ -209,14 +203,14 @@ public class Audio {
       } catch (IOException e) {
         System.err.println("I/O problems: " + e);
         System.out.println("I/O problems: " + e);
-        WavInt = NULL;
+        WavInt = null;
         ListenLine.close();
 //        System.exit(-1);
       }
     } catch (LineUnavailableException e) {
       System.err.println("Line unavailable: " + e);
       System.out.println("Line unavailable: " + e);
-      WavInt = NULL;
+      WavInt = null;
 //      System.exit(-2);
     }
     return WavInt;
@@ -224,7 +218,7 @@ public class Audio {
   /* **************************************************************************** */
   public int[] Bytes2Ints(byte[] byteArray, int ByteRayLen, int BytesPerSample) {
     //int ByteRayLen = byteArray.length;
-    int[] audio = NULL;
+    int[] audio = null;
     int LastByteDex = BytesPerSample - 1;
     int IntRayLen = ByteRayLen / BytesPerSample;
     int maxshift = LastByteDex * 8;
@@ -317,14 +311,14 @@ public class Audio {
   public double ScoreTest(int SoundInts[], int NumSamples) {
     //SawTooth(SoundInts, NumSamples, 22);// test
     int[] HearInts = FeedbackTest(SoundInts);
-    if (HearInts == NULL) {
+    if (HearInts == null) {
       return 0.0;
     }
     //PrintSample(HearInts, HearInts.length);
     double Score = JudgeWave(HearInts, HearInts.length);
     return Score;
   }
-
+  
   /* **************************************************************************** */
   public double JudgeWave(int[] HearInts, int NumSamples) {
     double Score = 0.0;
@@ -335,6 +329,3 @@ public class Audio {
     return Score / (double) NumSamples;
   }
 }
-#endif // DoRinger
-
-
