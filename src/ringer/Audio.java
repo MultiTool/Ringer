@@ -22,10 +22,11 @@ import javax.sound.sampled.*;
  */
 public class Audio {
   protected boolean running;
-  ByteArrayOutputStream out;
   public int BytesPerSample = 2;// 4
   public int BitsPerSample = BytesPerSample * Byte.SIZE;
-  float SampleRate = 44100;//8000;
+  public int MaxAmp = (1 << (BitsPerSample - 1)) - 1;
+//  float SampleRate = 44100;//8000;
+  int SampleRate = 44100;//8000;
   int bufferSize;
   byte buffer[];
   /* **************************************************************************** */
@@ -35,105 +36,97 @@ public class Audio {
     int SoundInts1[] = new int[NumSamples];
     //SawTooth(SoundInts0, NumSamples, 500);//120);
     Sine(SoundInts0, NumSamples, 300);//120);
+    //this.PrintSample(WaveSpeak, WaveSpeak.length);
+
+    int a0 = (1 << (BitsPerSample - 1)) - 1;
+    int a1 = ((1 << BitsPerSample) >> 1) - 1;
+
+    int blah = Integer.MAX_VALUE;
+    int a2 = ((1 << (32 - 1)) - 1);
 
     Feedback(SoundInts0, SoundInts1);
   }
   /* **************************************************************************** */
   private void Feedback(int WaveSpeak[], int WaveListen[]) {
-    byte SpeakBytes[]; //this.PrintSample(WaveSpeak, WaveSpeak.length);
+    byte SpeakBytes[];
     SpeakBytes = Ints2Bytes(WaveSpeak);
     try {
-      final AudioFormat SpeakFormat = GetFormat();
-      final AudioInputStream ais;
-      final SourceDataLine SpeakLine;
-      int[] WavInt;
-      DataLine.Info SpeakInfo, ListenInfo;
-      {
-        //int numframes = SpeakBytes.length / SpeakFormat.getFrameSize();
-        InputStream input = new ByteArrayInputStream(SpeakBytes);
-        ais = new AudioInputStream(input, SpeakFormat, SpeakBytes.length / SpeakFormat.getFrameSize());
-        SpeakInfo = new DataLine.Info(SourceDataLine.class, SpeakFormat);
-        SpeakLine = (SourceDataLine) AudioSystem.getLine(SpeakInfo);
-        SpeakLine.open(SpeakFormat);
-        SpeakLine.start();
-      }
-      final AudioFormat ListenFormat;
-      final TargetDataLine ListenLine;
-      {
-        ListenFormat = GetFormat();
-        ListenInfo = new DataLine.Info(TargetDataLine.class, ListenFormat);
-        ListenLine = (TargetDataLine) AudioSystem.getLine(ListenInfo);
-        ListenLine.open(ListenFormat);
-        ListenLine.start();
-      }
-
       // speak first in a separate thread, listen second in main thread
-      // PLAY *****************************************************************************************
-      Runnable SpeakerRun = new Runnable() { // player
-        //float numframes = 1000;// SpeakFormat.getSampleRate();
-        int BufferSize = (int) SpeakFormat.getSampleRate() * SpeakFormat.getFrameSize();
-        byte buffer[] = new byte[BufferSize];
-        @Override public void run() {
-          try {
-            int count;
-            while ((count = ais.read(buffer, 0, buffer.length)) != -1) {
-              if (count > 0) {
-                SpeakLine.write(buffer, 0, count);
-              }
-            }
-            SpeakLine.drain();
-            try {
-//              float dlay = ((float) (1000 * numframes)) / SpeakFormat.getSampleRate();
-//              Thread.sleep((int) dlay);
-              Thread.sleep(25);// length of the whole sample in milliseconds
-            } catch (Exception ex) {
-            }
-            //while (SpeakLine.getFramePosition() < numframes) {}
-            //while (SpeakLine.isActive()){}
+      {
+        // PLAY *****************************************************************************************
+        final AudioFormat SpeakFormat = GetFormat();
+        final SourceDataLine SpeakLine;
+        DataLine.Info SpeakInfo;
+        {
+          SpeakInfo = new DataLine.Info(SourceDataLine.class, SpeakFormat);
+          SpeakLine = (SourceDataLine) AudioSystem.getLine(SpeakInfo);
+          SpeakLine.open(SpeakFormat);
+          SpeakLine.start();
+        }
+        Runnable SpeakerRun = new Runnable() { // player
+          @Override public void run() {
+            SpeakLine.write(SpeakBytes, 0, SpeakBytes.length); // blocks thread
+            SpeakLine.drain();// blocks thread
             SpeakLine.close();
             running = false;
-          } catch (IOException e) {
-            System.err.println("I/O problems: " + e);
-            running = false;
-            //System.exit(-3);
           }
-        }
-      };
-      Thread PlayThread = new Thread(SpeakerRun);
+        };
+        Thread PlayThread = new Thread(SpeakerRun);
 
-      //int BufferSize = (int) ListenFormat.getSampleRate() * ListenFormat.getFrameSize();
-      int BufferSize = WaveListen.length * ListenFormat.getFrameSize();
-      byte ListenBytes[] = new byte[BufferSize];
-
-      out = new ByteArrayOutputStream();
-      running = true;
+        this.running = true;
 //      PlayThread.setPriority(Thread.MAX_PRIORITY); PlayThread.setDaemon(true);
-      PlayThread.start();
+        PlayThread.start();
+      }
+      {
+        // RECORD *****************************************************************************************
+        final AudioFormat ListenFormat;
+        final TargetDataLine ListenLine;
+        DataLine.Info ListenInfo;
+        int[] WavInt;
+        ByteArrayOutputStream out;
+        out = new ByteArrayOutputStream();
+        {
+          ListenFormat = GetFormat();
+          ListenInfo = new DataLine.Info(TargetDataLine.class, ListenFormat);
+          ListenLine = (TargetDataLine) AudioSystem.getLine(ListenInfo);
+          ListenLine.open(ListenFormat);
+          ListenLine.start();
+        }
+        int BufferSize = WaveListen.length * ListenFormat.getFrameSize();
+        byte ListenBytes[] = new byte[BufferSize];
 
-      // RECORD *****************************************************************************************
-      int count;
-      try {
-        while (running) {
-          count = ListenLine.read(ListenBytes, 0, ListenBytes.length);
-          if (count > 0) {
-            out.write(ListenBytes, 0, count);
-            WavInt = Bytes2Ints(ListenBytes, count);
-            for (int bcnt = 0; bcnt < WavInt.length; bcnt++) {
-              int bt = WavInt[bcnt];
-              System.out.println("WavInt:" + bt);
-              WaveListen[bcnt] = WavInt[bcnt];
+        /*
+        should reading end upon a condition, dynamically, or at a predetermined time?
+        1. measure latency between speaker and recording.
+        2. resize the listing array +latency, and maybe +safety margin.
+        otherwise, there isn't any way to tell if the sound has finished yet, right? 
+        
+        so create latency measure first.
+         */
+        int HeardCount, ListenDex = 0;
+        try {
+          while (this.running) {
+            System.out.println("ReadingLine");
+            HeardCount = ListenLine.read(ListenBytes, 0, ListenBytes.length);
+            if (HeardCount > 0) {
+              out.write(ListenBytes, 0, HeardCount);
+              WavInt = Bytes2Ints(ListenBytes, HeardCount);
+              for (int FrameCnt = 0; FrameCnt < HeardCount; FrameCnt++) {
+                WaveListen[ListenDex++] = WavInt[FrameCnt];
+              }
             }
           }
+          out.close();
+        } catch (IOException e) {
+          System.err.println("I/O problems: " + e); //System.exit(-1);
         }
-        out.close();
-      } catch (IOException e) {
-        System.err.println("I/O problems: " + e); //System.exit(-1);
       }
-
     } catch (LineUnavailableException e) {
       System.err.println("Line unavailable: " + e); // System.exit(-4);
+      e.printStackTrace();
     }
-    //Arrays.copyOf(WaveIn, WavInt);
+
+    this.PrintSample(WaveListen, WaveListen.length);
   }
   /* **************************************************************************** */
   private AudioFormat GetFormat() {
@@ -184,7 +177,7 @@ public class Audio {
       shifter = maxshift;// big endian
       samplepnt = (ByteArray[majorbcnt++] << shifter);// MSB, preserve sign
       while (shifter > 0) {
-        shifter -= 8;
+        shifter -= Byte.SIZE;
         samplepnt |= ((ByteArray[majorbcnt++] & 0xFF) << shifter);
       }
       audio[icnt] = samplepnt;
@@ -192,12 +185,24 @@ public class Audio {
     return audio;
   }
   /* **************************************************************************** */
+  public void Square(int SoundInts[], int NumSamples, double WaveLen) {
+    int Toggle = this.MaxAmp;
+    int HalfWaveLan = ((int) WaveLen) / 2;
+    for (int icnt = 0; icnt < NumSamples; icnt++) {
+      SoundInts[icnt] = Toggle;
+      if (icnt % HalfWaveLan == 0) {// not so efficient
+        Toggle = -Toggle;
+      }
+    }
+  }
+  /* **************************************************************************** */
   public void Sine(int SoundInts[], int NumSamples, double WaveLen) {
     double Time = 0;
     for (int icnt = 0; icnt < NumSamples; icnt++) {
       Time = ((double) icnt) / WaveLen;
       double amp = Math.sin(Time);
-      amp *= 1024.0 * 16.0;// 256.0;// arbitrary amplification
+      //amp *= 1024.0 * 16.0;// 256.0;// arbitrary amplification
+      amp *= this.MaxAmp;// max amplitude for this bit size
       SoundInts[icnt] = (int) Math.round(amp);
     }
   }
