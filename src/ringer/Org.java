@@ -9,7 +9,6 @@ public class Org {
   public Wave wave = null;
   public double[] Score;
   boolean Doomed = false;
-  double ModelStateMag;
   /* ********************************************************************** */
   public Org(int VSize) {
     this.wave = new Wave(VSize);
@@ -19,6 +18,7 @@ public class Org {
   public void Delete_Me() {
     this.wave.Delete_Me();
     this.wave = null;
+    this.Score = null;
   }
   /* ********************************************************************** */
   static Org Abiogenate(int Wdt) {
@@ -33,7 +33,7 @@ public class Org {
     return child;
   }
   /* ********************************************************************** */
-  public void Copy_From(Org donor){
+  public void Copy_From(Org donor) {
     this.wave.Copy_From(donor.wave);
   }
   /* ********************************************************************** */
@@ -52,7 +52,6 @@ public class Org {
   /* ********************************************************************** */
   void Reset() {
     Doomed = false;
-    ModelStateMag = 0.0;
     for (int cnt = 0; cnt < NumScores; cnt++) {
       this.Score[cnt] = 0;
     }

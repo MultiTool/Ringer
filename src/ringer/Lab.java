@@ -3,8 +3,8 @@ package ringer;
 class Lab {// Laboratory
   /* ********************************************************************** */
   public static void Run_Test() {
-    switch (5) {
-      case 5:
+    switch (0) {
+      case 0:
         Test_Sounder();
         break;
     }

@@ -11,9 +11,8 @@ import java.util.Comparator;
  */
 public class Pop {
   public Org[] Forest;
-  //public ArrayList<Org> Forest;
 
-  Tester tester = null;//, tester_internal=nullptr;// crucible
+  Tester tester = null;// crucible
   int GenCnt;
   double SurvivalRate = 0.2;//0.02;//0.05;//0.5;
   double MutRate = 0.2;//0.5;//0.3;//0.8//0.6;//0.99;//
@@ -68,8 +67,12 @@ public class Pop {
       AllTimeTopScore = 0.0;
       int AbortCnt = 0;
       System.out.printf("%nRetryCnt:%d%n", RetryCnt);
-      for (GenCnt = 0; GenCnt < MaxOrgGens; GenCnt++) {
-        this.Gen();
+      //for (GenCnt = 0; GenCnt < MaxOrgGens; GenCnt++) {
+      while (true) {// loop and a half
+        this.Score_And_Sort();//this.Gen();
+        this.Collect_Stats();
+        if (++this.GenCnt>=MaxOrgGens){ break; }
+
         CurrentTopScoreLocal = this.GetTopScore();
         if (CurrentTopScoreLocal >= 1.0) {
           System.out.printf("Maximized.%n");
@@ -85,11 +88,15 @@ public class Pop {
             break;
           }
         }
+        this.Birth_And_Death();
+        this.Mutate(MutRate, MutRate);
       }
       this.Print_Results();
       if (false) {
-        for (int gcnt = 0; gcnt < 50; gcnt++) {
-          this.Gen_No_Mutate();// coast, no mutations
+        for (int gcnt = 0; gcnt < 5000; gcnt++) {// coast, no mutations
+          this.Birth_And_Death();//this.Gen_No_Mutate();
+          this.Score_And_Sort();
+          this.Collect_Stats();
         }
         this.Print_Results();
       }
@@ -136,7 +143,6 @@ public class Pop {
     CurrentTopScore = TopOrg.Score[0];
     double TopDigiScore = TopOrg.Score[1];
     SumScores += TopDigiScore;
-    double ModelStateMag = TopOrg.ModelStateMag;
 
     //AvgTopDigi=SumScores/this.GenCnt;
     AvgTopDigi = (AvgTopDigi * 0.9) + (TopDigiScore * 0.1);

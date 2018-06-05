@@ -4,13 +4,17 @@ package ringer;
  *
  * @author MultiTool
  */
-public class Ringer {
+public class Ringer {// Resonador 
 
   /**
    * @param args the command line arguments
    */
   public static void main(String[] args) {
-    Lab.Run_Test();
+    Audio aud = new Audio();
+    aud.Test();
+    if (false) {
+      Lab.Run_Test();
+    }
   }
 
 }

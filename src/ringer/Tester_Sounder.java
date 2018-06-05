@@ -1,6 +1,5 @@
 package ringer;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 // Pack outputs from all creatures of a generation into a single long vector to squeeze out latencies of hardware IO.
